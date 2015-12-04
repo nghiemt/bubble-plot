@@ -15,7 +15,9 @@ d3.json("nations.json", function(nations) {
   var canvas_width = svg_width - margin.left - margin.right;
   var canvas_height = svg_height - margin.top - margin.bottom;
 
-var filtered_nations = nations.map(function(nation) { return nation; });
+  var filtered_nations = nations.map(function(nation) { return nation; });
+
+  var year_idx = parseInt(document.getElementById("year_slider").value)-1950;
 
   svg.attr("width", svg_width);
   svg.attr("height", svg_height);
@@ -91,32 +93,39 @@ d3.selectAll(".region_cb").on("change", function () {
 
 }
 
-update();
+update(year_idx)
+	})
+
+	d3.select("#year_slider").on("input", function () {
+	   //console.log(this.value);
+	   year_idx = parseInt(this.value) - 1950;
+	   update(year_idx);
 	});
 
 	 // Now creating the Data Canvas
 	 var data_canvas = canvas.append("g")
   			.attr("class", "data_canvas");
 
-update();
+update(year_idx);
 
 
-function update(){
+function update(idx){
 	var dot = data_canvas.selectAll(".dot")
   			.data(filtered_nations, function(d){return d.name});
   	// now if we replace the "nations" with the "filtered nations" variable it will display just the filtered nations
 
 
-dot.enter().append("circle").attr("class","dot")
-  .attr("cx", function(d) { return xScale(d.income[d.income.length-1]); }) 
-  .attr("cy", function(d) { return yScale(d.lifeExpectancy[d.lifeExpectancy.length-1]); })
-  .attr("r", function(d) {return rScale(d.population[d.population.length-1]);  })
-
-	  .style("fill",function(d){
+	dot.enter().append("circle").attr("class","dot")
+		  .style("fill",function(d){
 	  		return colScale(d.region)
-	  });
+		  });
 
-dot.exit().remove()
+	dot.transition().ease("linear").duration(200)
+	  .attr("cx", function(d) { return xScale(d.income[idx]); }) 
+	  .attr("cy", function(d) { return yScale(d.lifeExpectancy[idx]); })
+	  .attr("r", function(d) {return rScale(d.population[idx]);  })
+
+	dot.exit().remove()
 }
 
 
