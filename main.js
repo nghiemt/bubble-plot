@@ -7,13 +7,15 @@ d3.json("nations.json", function(nations) {
   var chart_area = d3.select("#chart_area");
   var svg = chart_area.append("svg");
   var canvas = svg.append("g");
-
+  var colScale = d3.scale.category20();
 
   var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 39.5};
   var svg_width = 960;
   var svg_height = 350;
   var canvas_width = svg_width - margin.left - margin.right;
   var canvas_height = svg_height - margin.top - margin.bottom;
+
+var filtered_nations = nations.map(function(nation) { return nation; });
 
   svg.attr("width", svg_width);
   svg.attr("height", svg_height);
@@ -65,27 +67,44 @@ d3.json("nations.json", function(nations) {
 	rScale.range([0,40]);
 
 
+
+
+// this function looks for a change in the object of class region_cb
+d3.selectAll(".region_cb").on("change", function () { 
+
+	//console.log(this)
+	// this shows all the details of the object in console.log
+
+	//console.log(this.name)
+	// this shows just one property of the object
+
+	var type = this.value;
+
+	if (this.checked) { // adding data points 
+  var new_nations = nations.filter(function(nation){ return nation.region == type;});
+
+  filtered_nations = filtered_nations.concat(new_nations);
+}  else { //removing data points
+
+	filtered_nations = filtered_nations.filter(function(nation){
+			return nation.region != type;});
+
+}
+
+update();
+	});
+
 	 // Now creating the Data Canvas
 	 var data_canvas = canvas.append("g")
   			.attr("class", "data_canvas");
 
-  // filtering just the nations (whose last year entry is) with population > 10 million
-  var filtered_nations = nations.filter(function(d){ 
-    return d.population[d.population.length-1] > 10e6;
-	});
+update();
 
-//console.log(filtered_nations);
 
-// exercise: Create a filter so that you only display data points from "Sub-Saharan Africa".
-  var filtered_region = nations.filter(function(d){ 
-    return d.region == "Sub-Saharan Africa";
-	});
-
-//console.log(filtered_region);
-      
+function update(){
 	var dot = data_canvas.selectAll(".dot")
-  			.data(filtered_region, function(d){return d.name});
-  	// now if we replace the "nations" with the "filtered nations" variable it will display just the filtered namtions
+  			.data(filtered_nations, function(d){return d.name});
+  	// now if we replace the "nations" with the "filtered nations" variable it will display just the filtered nations
 
 
 dot.enter().append("circle").attr("class","dot")
@@ -93,7 +112,12 @@ dot.enter().append("circle").attr("class","dot")
   .attr("cy", function(d) { return yScale(d.lifeExpectancy[d.lifeExpectancy.length-1]); })
   .attr("r", function(d) {return rScale(d.population[d.population.length-1]);  })
 
+	  .style("fill",function(d){
+	  		return colScale(d.region)
+	  });
 
+dot.exit().remove()
+}
 
 
 });
